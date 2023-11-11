@@ -1,0 +1,23 @@
+#container
+{
+
+    display: flex;
+    height: lvb;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 8px;
+    background-color:rgb(246, 241, 241);
+    width: 55lvb;
+    overflow: auto;
+    border-radius: 1lvb;
+    
+}
+
+  h2 {
+font: caption;
+       
+        display:table-row;
+    }
+
+   

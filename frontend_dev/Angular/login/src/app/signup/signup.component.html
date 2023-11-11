@@ -1,0 +1,21 @@
+<div id="container">
+    <h1>
+        sign up
+        
+
+    </h1>
+    <input type="text" placeholder="Email" />
+    <input type="password" placeholder="Password" />
+  
+    <h1>
+      role:
+      <input type="radio" [(ngModel)]="role" value="patient" name="role" (click)="setUserType('patient')" /> Patient
+      
+      <input type="radio" [(ngModel)]="role" value="doctor" name="role" (click)="setUserType('doctor')" /> Doctor
+
+
+    </h1>
+  
+    <button [routerLink]="role === 'patient' ? '/user' : '/doctor'">Sign Up</button>
+  </div>
+  
