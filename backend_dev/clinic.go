@@ -1,29 +1,19 @@
 package main
 
 import (
+	"example/hello/backend_dev/models"
 	"log"
 	"net/http"
 
-	"example/hello/models"
-
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
-/*type User struct {
-	gorm.Model
-	Username string
-	Password string
-	Role     string // "doctor" or "patient"
-}
-*/
-
 var doctors []models.Doctor
 var patients []models.Patient
-
-//var doctorSlots []models.DoctorSlots
 
 var DB *gorm.DB
 
@@ -32,6 +22,10 @@ func main() {
 
 	// Create a Gin router
 	router := gin.Default()
+	config := cors.DefaultConfig()
+	config.AllowOrigins = []string{"http://localhost:49153"} // Replace with your Angular app's address
+	config.AllowMethods = []string{"GET", "POST", "PUT", "DELETE"}
+	router.Use(cors.New(config))
 
 	// Define API endpoints
 
@@ -39,10 +33,12 @@ func main() {
 	router.POST("/sign-up/patient", signUpPatient)
 	router.POST("/sign-in", signIn)
 	router.POST("/insertDoctorSlot", insertDoctorSlot)
-	router.GET("/getDoctorSlot", getDoctorSlots)
 	router.POST("/creatAppoinment", chooseSlot)
+	router.GET("/getDoctorSlot", getDoctorSlots)
 	router.GET("/getallapponment", getAllappoinment)
 	router.GET("/getallapponmentforpatient", getAppointmentsForPatient)
+	router.GET("/getalldoctors", getAllDoctors)
+	router.GET("/getalldoctorsslots", getAllDoctorsSlot)
 	router.PUT("/updatetheappointment", updateAppointment)
 	router.DELETE("/cancelappointment", cancelAppointment)
 
@@ -85,16 +81,18 @@ func signIn(c *gin.Context) {
 
 	// Check if the user is a doctor
 	result := DB.Where("email = ? AND password = ? AND role = ?", input.Email, input.Password, "doctor").First(&doctor)
-	if result.Error != nil {
-		// If not, check if the user is a patient
-		result = DB.Where("email = ? AND password = ? AND role = ?", input.Email, input.Password, "patient").First(&patient)
-		if result.Error != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid username or password"})
-			return
-		}
+	if result.Error == nil {
+		c.JSON(http.StatusOK, gin.H{"message": "Sign-in successful", "object": doctor})
+		return
 	}
+	// If not, check if the user is a patient
+	result = DB.Where("email = ? AND password = ? AND role = ?", input.Email, input.Password, "patient").First(&patient)
+	if result.Error == nil {
+		c.JSON(http.StatusOK, gin.H{"message": "Sign-in successful", "object": patient})
+		return
+	}
+	c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid username or passwword."})
 
-	c.JSON(http.StatusOK, gin.H{"message": "Sign-in successful"})
 }
 
 func signUpDoctor(c *gin.Context) {
@@ -115,14 +113,6 @@ func signUpDoctor(c *gin.Context) {
 		c.JSON(http.StatusConflict, gin.H{"error": "Email already taken"})
 		return
 	}
-
-	/*for _, doctor := range doctors {
-		if doctor.Email == input.Email {
-			c.JSON(http.StatusConflict, gin.H{"error": "Email already taken "})
-			return
-		}
-	}
-	*/
 
 	// Create a new doctor
 	newDoctor := models.Doctor{
@@ -161,13 +151,6 @@ func signUpPatient(c *gin.Context) {
 		c.JSON(http.StatusConflict, gin.H{"error": "Email already taken"})
 		return
 	}
-	/*for _, patient := range patients {
-		if patient.Email == input.Email {
-			c.JSON(http.StatusConflict, gin.H{"error": "Email already taken "})
-			return
-		}
-	}
-	*/
 
 	// Create a new patient
 	newPatient := models.Patient{
@@ -179,7 +162,7 @@ func signUpPatient(c *gin.Context) {
 	patients = append(patients, newPatient)
 	patient := models.Patient{Email: input.Email, Password: input.Password, Role: input.Role}
 	result := DB.Create(&patient)
-	//result := DB.Where("email = ?", patient.Email).First(&patient)
+
 	if result.Error != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user"})
 		return
@@ -188,20 +171,24 @@ func signUpPatient(c *gin.Context) {
 	c.JSON(http.StatusOK, patients)
 
 }
+func getAllDoctors(c *gin.Context) {
+	var doctor []models.Doctor
+	result := DB.Find(&doctor)
+	if result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch doctors"})
+		return
+	}
+
+	c.JSON(http.StatusOK, doctor)
+
+}
 
 func insertDoctorSlot(c *gin.Context) {
 
 	var input struct {
 		Email string `json:"Email"`
-
-		/*Slots []struct {
-			StartTime time.Time `json:"start_time"`
-			EndTime   time.Time `json:"end_time"`
-		} `json:"slots"`
-		*/
-
-		Date string `json:"Date"`
-		Hour string `json:"Hour"`
+		Date  string `json:"Date"`
+		Hour  string `json:"Hour"`
 	}
 
 	if err := c.BindJSON(&input); err != nil {
@@ -226,14 +213,6 @@ func insertDoctorSlot(c *gin.Context) {
 		Hour:        input.Hour,
 	}
 
-	/*for _, slot := range input.Slots {
-	newDoctorSlot := models.DoctorSlots{
-		DoctorID:  doctor.ID,
-		StartTime: slot.StartTime,
-		EndTime:   slot.EndTime,
-	}
-	*/
-
 	result = DB.Create(&newdoctorSlot)
 	if result.Error != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create slot"})
@@ -242,23 +221,10 @@ func insertDoctorSlot(c *gin.Context) {
 
 	c.JSON(http.StatusCreated, gin.H{"message": "Slots created successfully"})
 
-	/*doctorSlots = append(doctorSlots, newdoctorSlot)
-	doctorslot := models.DoctorSlots{DoctorEmail: input.Email, StartTime: input.StartTime, EndTime: input.EndTime}
-	result = DB.Create(&doctorslot)
-	//result := DB.Where("email = ?", doctor.Email).First(&doctor)
-	if result.Error != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create slot"})
-		return
-	}
-
-	c.JSON(http.StatusOK, doctorSlots)
-	//c.JSON(http.StatusCreated, gin.H{"message": "User registered successfully"})
-	*/
-
 }
 
 func getDoctorSlots(c *gin.Context) {
-	//doctorEmail := c.Param("doctor_email")
+
 	var input struct {
 		DoctorEmail string `json:"doctor_email"`
 	}
@@ -277,18 +243,16 @@ func getDoctorSlots(c *gin.Context) {
 
 	c.JSON(http.StatusOK, slots)
 }
-
-/*func getAllDoctors(c *gin.Context) {
-	var doctors []models.Doctor
-	result := DB.Find(&doctors)
+func getAllDoctorsSlot(c *gin.Context) {
+	var slots []models.DoctorSlots
+	result := DB.Find(&slots)
 	if result.Error != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch doctors"})
 		return
 	}
 
-	c.JSON(http.StatusOK, doctors)
+	c.JSON(http.StatusOK, slots)
 }
-*/
 
 func chooseSlot(c *gin.Context) {
 	var input struct {
@@ -319,16 +283,12 @@ func chooseSlot(c *gin.Context) {
 
 	// Create an appointment
 	appointment := models.Appointment{
-		//DoctorID:     slot.DoctorID,
-		//SlotID:       slot.ID,
+
 		PatientID:    patient.ID,
 		PatientEmail: input.PatientEmail,
 		DoctorEmail:  slot.DoctorEmail,
 		Date:         slot.Date,
 		Hour:         slot.Hour,
-		// Set the appointment time based on the slot's start time
-		// For example, you can set it as slot.StartTime
-		// Add any other fields as needed
 	}
 
 	// Save the appointment to the database
@@ -350,9 +310,7 @@ func updateAppointment(c *gin.Context) {
 	var input struct {
 		AppointmentID uint   `json:"appointment_id"`
 		DoctorEmail   string `json:"doctor_email"`
-		//Date          string `json:"Date"`
-		//Hour          string `json:"Hour"`
-		SlotID uint `json:"slot_id"`
+		SlotID        uint   `json:"slot_id"`
 	}
 
 	if err := c.BindJSON(&input); err != nil {
@@ -373,13 +331,21 @@ func updateAppointment(c *gin.Context) {
 		return
 	}
 
+	var previousSlot models.DoctorSlots
+	result = DB.Where("doctor_email = ? AND is_booked = ?", input.DoctorEmail, true).First(&previousSlot)
+	if result.Error == nil {
+		// Set the previous slot's ISBooked to false
+		previousSlot.ISBooked = false
+		DB.Save(&previousSlot)
+	}
+
 	if slots.ISBooked {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Doctor slot is already booked"})
 		return
 	}
 
 	var appointment models.Appointment
-	//var slot models.DoctorSlots
+
 	result = DB.Where("id = ?", input.AppointmentID).First(&appointment)
 	if result.Error != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Appointment not found"})
@@ -434,7 +400,6 @@ func cancelAppointment(c *gin.Context) {
 	var input struct {
 		AppointmentID uint `json:"appointment_id"`
 	}
-
 	if err := c.BindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
 		return

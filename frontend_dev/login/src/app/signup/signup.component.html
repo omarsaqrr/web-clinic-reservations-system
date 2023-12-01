@@ -1,0 +1,16 @@
+<div id="container">
+  <h1>Sign Up</h1>
+  
+  <input type="text" placeholder="Email" name="email"  [(ngModel)]="email" (ngModelChange)="setEmail($event)"/>
+  <input type="password" placeholder="Password" name="password" [(ngModel)]="password"  (ngModelChange)="setPassword($event)"/>
+  
+  <h1>
+    Role:
+    <input type="radio" [(ngModel)]="role" value="patient" name="role" (click)="setUserType('patient')" /> Patient
+    <input type="radio" [(ngModel)]="role" value="doctor" name="role" (click)="setUserType('doctor')" /> Doctor
+  </h1>
+  
+  <button [routerLink]=
+  "(isSuccessful && role == 'patient'? '/user' : '') ||  (isSuccessful && role == 'doctor'? '/doctor' : '')"
+  (click)="signup()">Sign Up</button>
+</div>

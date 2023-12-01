@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <style>
+        body {
+            height: fit-content;
+            background-color: #f0f0f0;
+            text-align: center;
+            padding: 40px;
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        table {
+            width: 80%;
+            border-collapse: collapse;
+            background-color: white;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+            margin-top: 20px;
+        }
+
+        table, th, td {
+            border: 1px solid #ccc;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #009688;
+            color: white;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>
+        Hello User, (User Type: Patient)
+    </h1>
+
+    <h2>
+        My Appointments
+    </h2>
+
+    <table id="appointmentTable">
+        <thead>
+            <tr>
+                <th>Appointment Date</th>
+                <th>Appointment Time</th>
+                <th>Doctor Name</th>
+            </tr>
+        </thead>
+        <tbody id="appointmentTableBody">
+            <tr *ngFor="let item of data">
+                <td>{{ item.date }}</td>
+                <td>{{ item.time }}</td>
+                <td>{{ item.doctor }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3>
+        Create New Appointment
+    </h3>
+
+    <table>
+        <tr>
+            <td>Doctor Name:</td>
+            <td><input type="text" id="doctorName"></td>
+        </tr>
+        <tr>
+            <td>Appointment Date:</td>
+            <td><input type="date" id="appointmentDate"></td>
+        </tr>
+        <tr>
+            <td>Appointment Time:</td>
+            <td><input type="time" id="appointmentTime"></td>
+        </tr>
+        <tr>
+            <td></td>
+            <td><button id="createAppointmentButton">Create Appointment</button></td>
+        </tr>
+    </table>
+
+    <script>
+        window.onload = function() {
+            document.getElementById("createAppointmentButton").addEventListener("click", function() {
+                // Get values from input fields
+                var doctor = document.getElementById("doctorName").value;
+                var date = document.getElementById("appointmentDate").value;
+                var time = document.getElementById("appointmentTime").value;
+
+                // Check if the tbody element exists, if not, create it
+                var table = document.getElementById("appointmentTable");
+                var tableBody = table.querySelector('tbody');
+
+                if (!tableBody) {
+                    tableBody = document.createElement('tbody');
+                    table.appendChild(tableBody);
+                }
+
+                // Create a new row for the first table
+                var newRow = tableBody.insertRow(tableBody.rows.length);
+                var cell1 = newRow.insertCell(0);
+                var cell2 = newRow.insertCell(1);
+                var cell3 = newRow.insertCell(2);
+                cell1.innerHTML = date;
+                cell2.innerHTML = time;
+                cell3.innerHTML = doctor;
+
+                // Clear input fields
+                document.getElementById("doctorName").value = '';
+                document.getElementById("appointmentDate").value = '';
+                document.getElementById("appointmentTime").value = '';
+            });
+        };
+    </script>
+    
+</body>
+
+</html>

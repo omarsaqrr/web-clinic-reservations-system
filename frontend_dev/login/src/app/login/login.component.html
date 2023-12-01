@@ -1,0 +1,15 @@
+<div id="container">
+<h1>Login</h1>
+<input type="text" placeholder="Email" name="email"  [(ngModel)]="email" (ngModelChange)="setEmail($event)"/>
+<input type="password" placeholder="Password" name="password"  [(ngModel)]="password" (ngModelChange)="setPassword($event)" />
+
+<button [routerLink]=" role === 'patient' ? '/doctor' : '/user' "(click)="login()"> login</button>
+
+<h2>
+    Dont have an account? 
+    <button routerLink="/sign up">
+        sign up
+    </button>
+</h2>
+
+</div>
