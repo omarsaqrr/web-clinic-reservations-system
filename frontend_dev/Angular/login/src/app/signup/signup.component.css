@@ -1,0 +1,20 @@
+#container{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 8px;
+    background-color:rgb(246, 241, 241);
+    width: 45lvb;
+    height: 35lvb;
+    overflow: auto;
+    border-radius: 1lvb;
+    
+}
+
+h1 {
+    display: table-row;
+    font-size: medium;
+   
+
+}
