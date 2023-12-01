@@ -1,0 +1,22 @@
+version: '3'
+
+services:
+  frontend:
+    image: frontend-image
+    ports:
+      - "49153:4200"
+    depends_on:
+      - backend
+    networks:
+      - my_network
+
+  backend:
+    image: backend
+    ports:
+      - "8080:8080"
+    networks:
+      - my_network
+
+networks:
+  my_network:
+    driver: bridge
