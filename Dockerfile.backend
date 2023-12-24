@@ -1,14 +1,24 @@
+# Use the specified Golang version
 FROM golang:1.21.3
 
+# Set the working directory inside the container
 WORKDIR /backend
 
+# Copy go mod and sum files
+COPY go.mod .
+COPY go.sum .
+
+# Download dependencies
+RUN go mod download
+
+# Copy the entire project
 COPY . .
 
-RUN go get -u gorm.io/gorm
-RUN go get -u gorm.io/driver/postgres
-
+# Build the Go application
 RUN go build -o main .
 
+# Expose the port the application runs on
 EXPOSE 8080
 
+# Command to run the executable
 CMD ["./main"]
