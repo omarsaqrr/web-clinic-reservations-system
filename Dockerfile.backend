@@ -2,7 +2,7 @@
 FROM golang:1.21.3
 
 # Set the working directory inside the container
-WORKDIR /backend
+WORKDIR /backend_dev
 
 # Copy go mod and sum files
 COPY go.mod .
